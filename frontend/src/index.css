@@ -1,0 +1,506 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-color: #fcfcfc;
+  /* Very slightly off-white, paper-like */
+  --surface-color: #ffffff;
+  /* Pure white inside cards */
+  --surface-border: #222222;
+  /* Sharp black borders */
+  --primary-color: #111111;
+  /* Deep black for primary buttons */
+  --primary-hover: #333333;
+  /* Dark gray on hover */
+  --text-primary: #111111;
+  /* Almost black */
+  --text-secondary: #555555;
+  /* Medium gray for secondary text */
+  --danger-color: #111111;
+  /* Removed red, use bold/black instead */
+  --danger-bg: #f4f4f4;
+  /* Subtle gray background for emphasis */
+  --warning-color: #111111;
+  /* Removed orange */
+  --warning-bg: #fafafa;
+  --success-color: #111111;
+  /* Removed green */
+  --success-bg: #ffffff;
+  --shadow-sm: none;
+  /* No modern soft shadows */
+  --shadow-lg: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  /* Hard brutalist/print shadow */
+  --radius-md: 0px;
+  /* Sharp corners like a newspaper */
+  --radius-lg: 0px;
+  --transition: none;
+  /* Instant transitions for a mechanical feel */
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-text: 'Merriweather', 'Times New Roman', serif;
+}
+
+body {
+  font-family: var(--font-text);
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.login-container {
+  max-width: 420px;
+  margin: 120px auto;
+  padding: 3rem;
+  background: var(--surface-color);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--surface-border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-container h2 {
+  margin: 0 0 1rem 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 2.2rem;
+  text-align: center;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--surface-border);
+  padding-bottom: 10px;
+  text-transform: uppercase;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 1.2rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: var(--font-text);
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 2px 2px 0px 0px var(--primary-color);
+}
+
+button {
+  cursor: pointer;
+  padding: 12px 20px;
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 2px 2px 0px 0px var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+}
+
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+button.danger {
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+  border-style: dashed;
+}
+
+button.danger:hover {
+  background-color: var(--danger-bg);
+}
+
+button.secondary {
+  background-color: transparent;
+  color: var(--primary-color);
+}
+
+button.secondary:hover {
+  background-color: #eeeeee;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  border-color: #cccccc;
+  color: #888888;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 4px solid var(--surface-border);
+  /* Thick WSJ style line */
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.product-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.product-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1.5fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface-color);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  border-left: 6px solid var(--surface-border);
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.product-item.status-manque {
+  border-left-color: var(--danger-color);
+  background-color: var(--danger-bg);
+}
+
+.product-item.status-perime {
+  border-left-color: #000000;
+  background-color: #e5e5e5;
+  border-style: dashed;
+}
+
+.product-item.status-peremption-proche {
+  border-left-color: #555555;
+  background-color: #f0f0f0;
+}
+
+.product-item.status-surplus {
+  background-color: var(--warning-bg);
+}
+
+.product-item.status-normal {
+  background-color: var(--success-bg);
+}
+
+.product-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.product-info p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  border-radius: 2rem;
+}
+
+.quantity-controls span {
+  font-weight: 700;
+  font-size: 1.2rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.quantity-controls button {
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 860px) {
+  .product-item {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .quantity-controls {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    /* Increased gap for better spacing */
+  }
+}
+
+/* Mobile-Specific Optimization (True App Feel) */
+@media (max-width: 600px) {
+  .container {
+    padding: 15px 10px;
+  }
+
+  /* Give the header some breathing room from the top on true mobile */
+  .navbar {
+    margin-bottom: 2rem !important;
+    padding: 1.5rem 1rem !important;
+    /* Touch up padding for more height */
+    gap: 1.5rem;
+  }
+
+  /* Make sure the user area and buttons don't clump perfectly together */
+  .navbar>div {
+    width: 100%;
+    flex-wrap: wrap;
+    /* Allow wrapping if needed */
+    justify-content: space-between !important;
+    gap: 1rem;
+    /* Gap between user info and buttons */
+  }
+
+  .product-item {
+    grid-template-columns: 1fr auto;
+    /* Name/Info left, Controls right */
+    gap: 1rem;
+    text-align: left;
+    padding: 1rem;
+  }
+
+  .product-item>div:nth-child(3),
+  .product-item>div:nth-child(4) {
+    grid-column: 1 / -1;
+    /* Status and Actions span full width below */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .product-info h3 {
+    font-size: 1.1rem;
+  }
+
+  .quantity-controls {
+    margin: 0;
+    flex-direction: column;
+    /* Stack + and - vertically for narrower width */
+    gap: 8px;
+    background: transparent;
+    padding: 0;
+  }
+
+  .quantity-controls div input {
+    font-size: 1.1rem !important;
+    width: 45px !important;
+  }
+
+  /* Make Search and Filters Stackable Full Width */
+  .controls-container>div:first-child {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .controls-container input,
+  .controls-container select {
+    width: 100%;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    /* Add explicit gap between wrapping rows */
+    margin-top: 1rem;
+    /* Space between search/category and filter buttons */
+  }
+
+  .filters button {
+    flex: 1 1 45%;
+    /* Two buttons per row */
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 12px;
+    /* Taller button for better tap target */
+  }
+
+  .stat-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    /* Add margin to stats so they don't stick to each other or controls */
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: var(--surface-color);
+  border: 4px solid var(--surface-border);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  width: 95%;
+  /* Take more space on mobile */
+  max-width: 500px;
+  max-height: 90vh;
+  /* Prevent modal from overflowing screen vertically */
+  overflow-y: auto;
+  /* Scrollable inside if too long */
+  box-shadow: var(--shadow-lg);
+}
+
+/* Modals inputs stack perfectly on mobile */
+@media (max-width: 600px) {
+  .modal-content form>div {
+    grid-template-columns: 1fr !important;
+    /* Stack columns */
+    gap: 0.8rem !important;
+  }
+}
+
+/* Dashboard Stats Cards */
+.stat-card {
+  display: flex;
+  align-items: center;
+  background: var(--surface-color);
+  border: 2px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: 1.2rem 1.5rem;
+  box-shadow: var(--shadow-lg);
+  gap: 1.2rem;
+}
+
+.stat-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
