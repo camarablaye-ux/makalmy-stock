@@ -15,6 +15,7 @@ apiClient.interceptors.request.use(config => {
 });
 
 export const login = (credentials) => apiClient.post('/auth/login', credentials);
+export const register = (credentials) => apiClient.post('/auth/register', credentials);
 export const getProducts = () => apiClient.get('/products');
 export const addProduct = (productData) => apiClient.post('/products', productData);
 export const updateQuantity = (id, newQuantity, oldQuantity) =>

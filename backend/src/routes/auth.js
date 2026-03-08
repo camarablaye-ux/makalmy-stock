@@ -5,6 +5,32 @@ const db = require('../database/connection');
 const { verifyToken, isProprietaire } = require('../middleware/auth');
 const router = express.Router();
 
+// --- INSCRIPTION (premier compte = propriétaire, ensuite = employé) ---
+router.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "Nom d'utilisateur et mot de passe requis." });
+    if (password.length < 6) return res.status(400).json({ error: 'Le mot de passe doit comporter au moins 6 caractères.' });
+
+    try {
+        const existing = await db.queryOne('SELECT id FROM users WHERE username = ?', [username]);
+        if (existing) return res.status(400).json({ error: "Ce nom d'utilisateur existe déjà." });
+
+        // Le premier utilisateur est automatiquement propriétaire
+        const allUsers = await db.query('SELECT id FROM users');
+        const role = allUsers.length === 0 ? 'proprietaire' : 'employe';
+
+        const hashed = bcrypt.hashSync(password, 10);
+        await db.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, hashed, role]);
+
+        // Connexion automatique après inscription
+        const token = jwt.sign({ username, role }, process.env.JWT_SECRET, { expiresIn: '8h' });
+        res.status(201).json({ token, role, username, message: `Compte "${role}" créé avec succès.` });
+    } catch (err) {
+        console.error('Erreur register:', err);
+        res.status(500).json({ error: 'Erreur serveur.' });
+    }
+});
+
 // --- LOGIN ---
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
