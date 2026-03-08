@@ -13,6 +13,7 @@ const BottomNav = ({ toggleTheme, theme }) => {
         { path: '/', icon: '📦', label: 'Stock' },
         ...(user.role === 'proprietaire'
             ? [
+                { path: '/inventaire', icon: '⚡', label: 'Inventaire' },
                 { path: '/finances', icon: '💰', label: 'Finances' },
                 { path: '/analytics', icon: '📈', label: 'Analytics' }
             ]

@@ -267,7 +267,7 @@ button:disabled {
   box-shadow: none;
 }
 
-/* ===== LAYOUT ===== */
+/* ===== LAYOUT & CONTROLS ===== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -278,10 +278,98 @@ button:disabled {
   border-bottom: 1px solid var(--surface-border);
 }
 
+.controls-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface-color);
+  padding: 1.2rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='dark'] .controls-container {
+  background: rgba(17, 24, 39, 0.9);
+}
+
 .filters {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+/* Pills Filters */
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-color);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.filter-pill:hover {
+  background: var(--surface-border);
+  color: var(--text-primary);
+}
+
+.filter-pill.active {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-color: var(--primary-color);
+}
+
+/* ===== FLOATING ACTION BUTTON (FAB) ===== */
+.fab-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 900;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+  border: none;
+}
+
+.fab-button:hover {
+  transform: scale(1.1) translateY(-5px);
+  box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+  .fab-button {
+    bottom: 80px;
+    /* Above the bottom nav */
+    right: 1.5rem;
+    width: 55px;
+    height: 55px;
+    font-size: 1.5rem;
+  }
 }
 
 /* ===== PRODUCT LIST ===== */

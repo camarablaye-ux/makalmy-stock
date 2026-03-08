@@ -133,15 +133,17 @@ const ProductList = ({ theme, toggleTheme }) => {
                     <Logo />
                     <nav style={{ display: 'flex', gap: '0.5rem' }}>
                         <button style={{ padding: '6px 14px', fontSize: '0.85rem', pointerEvents: 'none' }}>📦 Stock</button>
-                        {user.role === 'proprietaire' && <button className="secondary" onClick={() => navigate('/finances')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>💰 Finances</button>}
+                        {user.role === 'proprietaire' && (
+                            <>
+                                <button className="secondary" onClick={() => navigate('/inventaire')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>⚡ Inventaire Rapide</button>
+                                <button className="secondary" onClick={() => navigate('/finances')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>💰 Finances</button>
+                            </>
+                        )}
                         {user.role === 'employe' && <button className="secondary" onClick={() => navigate('/saisie')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>💳 Saisie Achats</button>}
                         <button className="secondary" onClick={() => navigate('/settings')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>⚙️ Réglages</button>
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    {user.role === 'proprietaire' && (
-                        <button onClick={() => setIsAddModalOpen(true)} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>+ Produit</button>
-                    )}
                     <button onClick={toggleTheme} className="secondary" style={{ fontSize: '1rem', padding: '6px 10px', borderRadius: '50%' }}>
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
@@ -152,11 +154,11 @@ const ProductList = ({ theme, toggleTheme }) => {
 
             <DashboardStats products={products} />
 
-            <div className="controls-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface-color)', padding: '1.2rem', border: '1px solid var(--surface-border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="controls-container">
                 <div style={{ flex: 1, minWidth: '300px', display: 'flex', gap: '1rem' }}>
                     <input
                         type="text"
-                        placeholder="🔍 Rechercher un produit par nom..."
+                        placeholder="🔍 Rechercher un produit..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ flex: 2, marginBottom: 0 }}
@@ -171,15 +173,25 @@ const ProductList = ({ theme, toggleTheme }) => {
                         ))}
                     </select>
                 </div>
-                <div className="filters" style={{ margin: 0, display: 'flex', gap: '10px' }}>
-                    <button onClick={() => setFilter('tout')} className={filter === 'tout' ? '' : 'secondary'}>Voir Tout</button>
-                    <button onClick={() => setFilter('manque')} className={filter === 'manque' ? 'danger' : 'secondary'}>En Manque</button>
-                    <button onClick={() => setFilter('surplus')} className={filter === 'surplus' ? 'warning' : 'secondary'}>En Surplus</button>
-                    <button onClick={handleExportCSV} className="secondary" style={{ marginLeft: 'auto' }}>
+                <div className="filters">
+                    <button className={`filter-pill ${filter === 'tout' ? 'active' : ''}`} onClick={() => setFilter('tout')}>Voir Tout</button>
+                    <button className={`filter-pill ${filter === 'manque' ? 'active' : ''}`} onClick={() => setFilter('manque')}>⚠️ En Manque</button>
+                    <button className={`filter-pill ${filter === 'surplus' ? 'active' : ''}`} onClick={() => setFilter('surplus')}>📦 En Surplus</button>
+                    <button onClick={handleExportCSV} className="secondary" style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '20px' }}>
                         {user.role === 'employe' ? '📋 Liste de Courses' : '📥 Exporter CSV'}
                     </button>
                 </div>
             </div>
+
+            {user.role === 'proprietaire' && (
+                <button
+                    className="fab-button"
+                    onClick={() => setIsAddModalOpen(true)}
+                    title="Ajouter un produit"
+                >
+                    +
+                </button>
+            )}
 
             {error && <div style={{ color: 'var(--danger-color)', padding: '1rem', background: 'var(--danger-bg)', borderRadius: 'var(--radius-md)', marginTop: '1rem' }}>{error}</div>}
 
