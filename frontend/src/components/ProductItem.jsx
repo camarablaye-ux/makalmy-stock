@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import * as api from '../services/api';
 import HistoryModal from './HistoryModal';
 import { toast } from 'react-hot-toast';
+import { getCategoryIcon } from '../utils/categoryIcons';
+import { useSwipeable } from 'react-swipeable';
 
 const STATUS_CONFIG = {
     'peremption-proche': { icon: '🟠', label: 'Péremption Proche', badge: 'badge-peremption-proche' },
@@ -18,6 +20,7 @@ const ProductItem = ({ product, onUpdate }) => {
     const [isEditingQuantity, setIsEditingQuantity] = useState(false);
     const [editValue, setEditValue] = useState(product.quantite_stock);
     const [qtyFlash, setQtyFlash] = useState(false);
+    const [swipeOffset, setSwipeOffset] = useState(0);
     const flashTimeout = useRef(null);
 
     const getStatus = () => {
@@ -39,19 +42,48 @@ const ProductItem = ({ product, onUpdate }) => {
         flashTimeout.current = setTimeout(() => setQtyFlash(false), 350);
     };
 
-    const handleQuantityChange = async (amount) => {
+    const handleQuantityChange = async (amount, customToast = false) => {
         const newQuantity = product.quantite_stock + amount;
         if (newQuantity < 0) return;
         try {
             await api.updateQuantity(product.id, newQuantity, product.quantite_stock);
             triggerFlash();
             onUpdate();
-            toast.success("Quantité mise à jour");
+            if (!customToast) {
+                toast.success("Quantité mise à jour");
+            }
         } catch (error) {
             console.error("Erreur de mise à jour", error);
             toast.error("Erreur lors de la mise à jour");
         }
     };
+
+    const swipeHandlers = useSwipeable({
+        onSwiping: (e) => {
+            if (e.dir === 'Left') {
+                setSwipeOffset(-Math.min(e.absX, 100));
+            } else if (e.dir === 'Right') {
+                setSwipeOffset(Math.min(e.absX, 100));
+            }
+        },
+        onSwipedLeft: () => {
+            setSwipeOffset(0);
+            if (product.quantite_stock > 0) {
+                handleQuantityChange(-1, true);
+                toast(`-1 ${product.nom_produit}`, { icon: '👈' });
+            }
+        },
+        onSwipedRight: () => {
+            setSwipeOffset(0);
+            handleQuantityChange(1, true);
+            toast(`+1 ${product.nom_produit}`, { icon: '👉' });
+        },
+        onSwiped: () => {
+            setSwipeOffset(0);
+        },
+        trackMouse: true,
+        preventDefaultTouchmoveEvent: true
+    });
 
     const handleDelete = async () => {
         if (window.confirm(`Voulez-vous vraiment supprimer "${product.nom_produit}" ?`)) {
@@ -67,12 +99,19 @@ const ProductItem = ({ product, onUpdate }) => {
     };
 
     return (
-        <div className={`product-item status-${status}`}>
+        <div
+            {...swipeHandlers}
+            className={`product-item status-${status}`}
+            style={{
+                transform: `translateX(${swipeOffset}px)`,
+                transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+            }}
+        >
             <div className="product-info">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <h3 style={{ margin: 0 }}>{product.nom_produit}</h3>
                     <span style={{ fontSize: '0.75rem', padding: '2px 6px', border: '1px solid var(--text-secondary)', borderRadius: '4px', color: 'var(--text-secondary)' }}>
-                        {product.categorie}
+                        {getCategoryIcon(product.categorie)} {product.categorie}
                     </span>
                 </div>
                 <p>Seuils : {product.seuil_minimum} / {product.seuil_maximum}</p>

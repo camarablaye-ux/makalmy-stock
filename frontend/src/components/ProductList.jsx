@@ -6,7 +6,7 @@ import AddProductModal from './AddProductModal';
 import Logo from './Logo';
 import DashboardStats from './DashboardStats';
 import { toast } from 'react-hot-toast';
-
+import { getCategoryIcon } from '../utils/categoryIcons';
 import { useNavigate } from 'react-router-dom';
 
 const ProductList = ({ theme, toggleTheme }) => {
@@ -29,9 +29,17 @@ const ProductList = ({ theme, toggleTheme }) => {
             setProducts(data);
         } catch (error) {
             console.error("Erreur de chargement des produits", error);
-            setError("Impossible de charger les produits. Veuillez vérifier votre connexion.");
+            if (!navigator.onLine) {
+                if (products.length === 0) {
+                    setError("Vous êtes hors-ligne et n'avez pas de données en cache. Connectez-vous à internet.");
+                } else {
+                    toast('Mode hors-ligne actif. Vos données sont affichées depuis la mémoire.', { icon: '📴', duration: 4000 });
+                }
+            } else {
+                setError("Impossible de charger les produits. Veuillez vérifier votre connexion.");
+            }
         }
-    }, []);
+    }, [products.length]);
 
     useEffect(() => {
         fetchProducts();
@@ -169,7 +177,7 @@ const ProductList = ({ theme, toggleTheme }) => {
                         style={{ flex: 1, marginBottom: 0 }}
                     >
                         {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat} value={cat}>{cat !== 'Toutes' ? `${getCategoryIcon(cat)} ` : ''}{cat}</option>
                         ))}
                     </select>
                 </div>

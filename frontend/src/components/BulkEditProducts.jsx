@@ -4,6 +4,7 @@ import * as api from '../services/api';
 import Logo from './Logo';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 const BulkEditProducts = ({ theme, toggleTheme }) => {
     const { user, logOut } = useAuth();
@@ -23,7 +24,6 @@ const BulkEditProducts = ({ theme, toggleTheme }) => {
             const { data } = await api.getProducts();
             setProducts(data);
 
-            // Initialize edit state with current stock values
             const initialEdits = {};
             data.forEach(p => {
                 initialEdits[p.id] = p.quantite_stock;
@@ -32,9 +32,17 @@ const BulkEditProducts = ({ theme, toggleTheme }) => {
 
         } catch (error) {
             console.error("Erreur de chargement des produits", error);
-            setError("Impossible de charger les produits. Veuillez vérifier votre connexion.");
+            if (!navigator.onLine) {
+                if (products.length === 0) {
+                    setError("Vous êtes hors-ligne et n'avez pas de données en cache.");
+                } else {
+                    toast('Mode hors-ligne actif. Vos données sont affichées depuis la mémoire.', { icon: '📴', duration: 4000 });
+                }
+            } else {
+                setError("Impossible de charger les produits. Veuillez vérifier votre connexion.");
+            }
         }
-    }, []);
+    }, [products.length]);
 
     useEffect(() => {
         fetchProducts();
@@ -143,7 +151,7 @@ const BulkEditProducts = ({ theme, toggleTheme }) => {
                         style={{ flex: 1, marginBottom: 0 }}
                     >
                         {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat} value={cat}>{cat !== 'Toutes' ? `${getCategoryIcon(cat)} ` : ''}{cat}</option>
                         ))}
                     </select>
                 </div>
@@ -173,7 +181,7 @@ const BulkEditProducts = ({ theme, toggleTheme }) => {
                             <div>
                                 <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem' }}>{product.nom_produit}</h3>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                    {product.categorie} • {product.unite}
+                                    {getCategoryIcon(product.categorie)} {product.categorie} • {product.unite}
                                 </span>
                             </div>
 

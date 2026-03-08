@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { addToQueue, processQueue } from './syncManager';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001/api`;
 
@@ -12,6 +13,29 @@ apiClient.interceptors.request.use(config => {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+});
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (!error.response && error.config) {
+            // Network error (offline or server down)
+            const method = error.config.method?.toLowerCase();
+            if (['post', 'put', 'patch', 'delete'].includes(method) && !error.config.url.includes('/auth/login')) {
+                addToQueue({
+                    url: error.config.url,
+                    method: error.config.method,
+                    data: typeof error.config.data === 'string' ? JSON.parse(error.config.data) : error.config.data
+                });
+                return Promise.resolve({ data: { offline: true, message: 'Mis en file d\'attente' } });
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+window.addEventListener('online', () => {
+    processQueue(apiClient);
 });
 
 export const login = (credentials) => apiClient.post('/auth/login', credentials);
