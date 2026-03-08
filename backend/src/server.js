@@ -6,6 +6,7 @@ const productRoutes = require('./routes/products');
 const financeRoutes = require('./routes/finances');
 const investRoutes = require('./routes/investissements');
 const fournisseurRoutes = require('./routes/fournisseurs');
+const analyticsRoutes = require('./routes/analytics');
 const db = require('./database/connection');
 
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/finances', financeRoutes);
 app.use('/api/investissements', investRoutes);
 app.use('/api/fournisseurs', fournisseurRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

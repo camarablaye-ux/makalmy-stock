@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import ProductList from './components/ProductList';
 import FinanceDashboard from './components/FinanceDashboard';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import EmployeeChargeForm from './components/EmployeeChargeForm';
 import Settings from './components/Settings';
 import BottomNav from './components/BottomNav';
@@ -52,6 +53,15 @@ function App() {
                 <Route path="/saisie" element={
                     <ProtectedRoute>
                         <EmployeeChargeForm theme={theme} toggleTheme={toggleTheme} />
+                    </ProtectedRoute>
+                } />
+                <Route path="/analytics" element={
+                    <ProtectedRoute>
+                        {user?.role === 'proprietaire' ? (
+                            <AnalyticsDashboard theme={theme} toggleTheme={toggleTheme} />
+                        ) : (
+                            <Navigate to="/" replace />
+                        )}
                     </ProtectedRoute>
                 } />
                 <Route path="/settings" element={

@@ -12,7 +12,10 @@ const BottomNav = ({ toggleTheme, theme }) => {
     const tabs = [
         { path: '/', icon: '📦', label: 'Stock' },
         ...(user.role === 'proprietaire'
-            ? [{ path: '/finances', icon: '💰', label: 'Finances' }]
+            ? [
+                { path: '/finances', icon: '💰', label: 'Finances' },
+                { path: '/analytics', icon: '📈', label: 'Analytics' }
+            ]
             : [{ path: '/saisie', icon: '💳', label: 'Saisie' }]
         ),
         { path: '/settings', icon: '⚙️', label: 'Réglages' },

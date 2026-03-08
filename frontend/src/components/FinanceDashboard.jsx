@@ -186,6 +186,9 @@ const FinanceDashboard = ({ theme, toggleTheme }) => {
                     <nav style={{ display: 'flex', gap: '0.5rem' }}>
                         <button className="secondary" onClick={() => navigate('/')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>📦 Stock</button>
                         <button style={{ padding: '6px 14px', fontSize: '0.85rem', pointerEvents: 'none' }}>💰 Finances</button>
+                        {user?.role === 'proprietaire' && (
+                            <button className="secondary" onClick={() => navigate('/analytics')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>📈 Analytics</button>
+                        )}
                         <button className="secondary" onClick={() => navigate('/settings')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>⚙️ Réglages</button>
                     </nav>
                 </div>

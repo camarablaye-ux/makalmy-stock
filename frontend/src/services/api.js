@@ -29,6 +29,11 @@ export const addFinance = (data) => apiClient.post('/finances', data);
 export const deleteFinance = (id) => apiClient.delete(`/finances/${id}`);
 export const getFinanceBilan = () => apiClient.get('/finances/bilan');
 
+// Analytics API (Business Intelligence)
+export const getAnalyticsCA = () => apiClient.get('/analytics/ca-evolution');
+export const getAnalyticsTopProducts = () => apiClient.get('/analytics/top-produits');
+export const getAnalyticsMarge = () => apiClient.get('/analytics/marge');
+
 // Investissements API
 export const getInvestissements = () => apiClient.get('/investissements');
 export const getInvestResume = () => apiClient.get('/investissements/resume');
