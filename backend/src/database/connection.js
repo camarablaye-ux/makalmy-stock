@@ -76,6 +76,24 @@ const db = {
                 });
             }
         });
+    },
+    executeRunReturnId: (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+            if (isPostgres) {
+                let i = 1;
+                let pgSql = sql.replace(/\?/g, () => `$${i++}`);
+                if (!pgSql.toUpperCase().includes('RETURNING')) {
+                    pgSql += ' RETURNING id';
+                }
+                pool.query(pgSql, params)
+                    .then(res => resolve({ id: (res.rows && res.rows.length > 0) ? res.rows[0].id : null }))
+                    .catch(reject);
+            } else {
+                sqliteDb.run(sql, params, function (err) {
+                    if (err) reject(err); else resolve({ id: this.lastID });
+                });
+            }
+        });
     }
 };
 

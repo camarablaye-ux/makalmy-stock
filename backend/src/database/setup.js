@@ -29,6 +29,37 @@ const setup = async () => {
             FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
         )`);
 
+        await db.execute(`CREATE TABLE IF NOT EXISTS transactions (
+            id ${idType},
+            type TEXT NOT NULL CHECK(type IN ('revenu', 'charge')),
+            montant REAL NOT NULL,
+            motif TEXT NOT NULL,
+            categorie_syscohada TEXT DEFAULT 'Non catégorisé',
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            utilisateur TEXT
+        )`);
+
+        await db.execute(`CREATE TABLE IF NOT EXISTS investissements (
+            id ${idType},
+            nom TEXT NOT NULL,
+            nature TEXT NOT NULL,
+            montant REAL NOT NULL,
+            duree_mois INTEGER NOT NULL,
+            amortissement_mensuel REAL NOT NULL,
+            date_achat DATE NOT NULL,
+            date_fin DATE NOT NULL,
+            actif INTEGER DEFAULT 1
+        )`);
+
+        await db.execute(`CREATE TABLE IF NOT EXISTS fournisseurs (
+            id ${idType},
+            nom TEXT NOT NULL,
+            telephone TEXT DEFAULT '',
+            categorie TEXT DEFAULT 'Général',
+            notes TEXT DEFAULT '',
+            date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
         await db.execute(`CREATE TABLE IF NOT EXISTS users (
             id ${idType},
             username TEXT UNIQUE NOT NULL,

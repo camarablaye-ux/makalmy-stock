@@ -7,8 +7,11 @@ import Logo from './Logo';
 import DashboardStats from './DashboardStats';
 import { toast } from 'react-hot-toast';
 
-const ProductList = () => {
+import { useNavigate } from 'react-router-dom';
+
+const ProductList = ({ theme, toggleTheme }) => {
     const { user, logOut } = useAuth();
+    const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [filter, setFilter] = useState('tout');
     const [activeCategory, setActiveCategory] = useState('Toutes');
@@ -125,28 +128,31 @@ const ProductList = () => {
 
     return (
         <div>
-            <header className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '1rem', background: 'var(--surface-color)', borderBottom: '4px solid var(--surface-border)' }}>
-                <Logo />
+            <header className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1rem', background: 'var(--surface-color)', borderBottom: '1px solid var(--surface-border)', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '0', border: '2px solid var(--primary-color)', background: 'var(--primary-color)', color: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontFamily: 'var(--font-serif)' }}>
-                            {user.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{user.username}</span>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user.role}</span>
-                        </div>
-                    </div>
+                    <Logo />
+                    <nav style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button style={{ padding: '6px 14px', fontSize: '0.85rem', pointerEvents: 'none' }}>📦 Stock</button>
+                        {user.role === 'proprietaire' && <button className="secondary" onClick={() => navigate('/finances')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>💰 Finances</button>}
+                        {user.role === 'employe' && <button className="secondary" onClick={() => navigate('/saisie')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>💳 Saisie Achats</button>}
+                        <button className="secondary" onClick={() => navigate('/settings')} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>⚙️ Réglages</button>
+                    </nav>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                     {user.role === 'proprietaire' && (
-                        <button onClick={() => setIsAddModalOpen(true)}>+ Nouveau Produit</button>
+                        <button onClick={() => setIsAddModalOpen(true)} style={{ padding: '6px 14px', fontSize: '0.85rem' }}>+ Produit</button>
                     )}
-                    <button onClick={logOut} className="secondary">Déconnexion</button>
+                    <button onClick={toggleTheme} className="secondary" style={{ fontSize: '1rem', padding: '6px 10px', borderRadius: '50%' }}>
+                        {theme === 'light' ? '🌙' : '☀️'}
+                    </button>
+                    <button onClick={logOut} className="secondary" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Quitter</button>
                 </div>
             </header>
 
+
             <DashboardStats products={products} />
 
-            <div className="controls-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface-color)', padding: '1rem', border: '2px solid var(--surface-border)' }}>
+            <div className="controls-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface-color)', padding: '1.2rem', border: '1px solid var(--surface-border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ flex: 1, minWidth: '300px', display: 'flex', gap: '1rem' }}>
                     <input
                         type="text"
@@ -179,7 +185,15 @@ const ProductList = () => {
 
             <div className="product-list" style={{ marginTop: '2rem' }}>
                 {sortedAndFilteredProducts.length === 0 && !error ? (
-                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>Aucun produit trouvé.</p>
+                    <div className="empty-state">
+                        <div className="empty-state-icon">📦</div>
+                        <div className="empty-state-title">Aucun produit trouvé</div>
+                        <div className="empty-state-text">
+                            {searchQuery || activeCategory !== 'Toutes' || filter !== 'tout'
+                                ? 'Essayez de modifier vos filtres de recherche.'
+                                : 'Commencez par ajouter votre premier produit en cliquant sur "+ Produit".'}
+                        </div>
+                    </div>
                 ) : (
                     sortedAndFilteredProducts.map(product => (
                         <ProductItem key={product.id} product={product} onUpdate={handleUpdate} />

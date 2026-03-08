@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import * as api from '../services/api';
 import HistoryModal from './HistoryModal';
 import { toast } from 'react-hot-toast';
+
+const STATUS_CONFIG = {
+    'peremption-proche': { icon: '🟠', label: 'Péremption Proche', badge: 'badge-peremption-proche' },
+    'perime': { icon: '⚫', label: 'Périmé', badge: 'badge-perime' },
+    'manque': { icon: '🔴', label: 'En Manque', badge: 'badge-manque' },
+    'surplus': { icon: '🟣', label: 'En Surplus', badge: 'badge-surplus' },
+    'normal': { icon: '🟢', label: 'Normal', badge: 'badge-normal' }
+};
 
 const ProductItem = ({ product, onUpdate }) => {
     const { user } = useAuth();
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isEditingQuantity, setIsEditingQuantity] = useState(false);
     const [editValue, setEditValue] = useState(product.quantite_stock);
+    const [qtyFlash, setQtyFlash] = useState(false);
+    const flashTimeout = useRef(null);
 
     const getStatus = () => {
         if (product.date_peremption) {
@@ -21,16 +31,12 @@ const ProductItem = ({ product, onUpdate }) => {
         return 'normal';
     };
     const status = getStatus();
+    const statusInfo = STATUS_CONFIG[status];
 
-    const getStatusLabel = (s) => {
-        switch (s) {
-            case 'peremption-proche': return 'Péremption Proche';
-            case 'perime': return 'Périmé';
-            case 'manque': return 'En Manque';
-            case 'surplus': return 'En Surplus';
-            case 'normal': return 'Normal';
-            default: return s;
-        }
+    const triggerFlash = () => {
+        setQtyFlash(true);
+        if (flashTimeout.current) clearTimeout(flashTimeout.current);
+        flashTimeout.current = setTimeout(() => setQtyFlash(false), 350);
     };
 
     const handleQuantityChange = async (amount) => {
@@ -38,6 +44,7 @@ const ProductItem = ({ product, onUpdate }) => {
         if (newQuantity < 0) return;
         try {
             await api.updateQuantity(product.id, newQuantity, product.quantite_stock);
+            triggerFlash();
             onUpdate();
             toast.success("Quantité mise à jour");
         } catch (error) {
@@ -62,7 +69,7 @@ const ProductItem = ({ product, onUpdate }) => {
     return (
         <div className={`product-item status-${status}`}>
             <div className="product-info">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <h3 style={{ margin: 0 }}>{product.nom_produit}</h3>
                     <span style={{ fontSize: '0.75rem', padding: '2px 6px', border: '1px solid var(--text-secondary)', borderRadius: '4px', color: 'var(--text-secondary)' }}>
                         {product.categorie}
@@ -98,6 +105,7 @@ const ProductItem = ({ product, onUpdate }) => {
                             if (!isNaN(parsed) && parsed !== product.quantite_stock && parsed >= 0) {
                                 try {
                                     await api.updateQuantity(product.id, parsed, product.quantite_stock);
+                                    triggerFlash();
                                     onUpdate();
                                     toast.success("Quantité mise à jour");
                                 } catch (error) {
@@ -110,6 +118,7 @@ const ProductItem = ({ product, onUpdate }) => {
                                 e.target.blur();
                             }
                         }}
+                        className={qtyFlash ? 'qty-flash' : ''}
                         style={{
                             width: '60px',
                             textAlign: 'center',
@@ -128,7 +137,9 @@ const ProductItem = ({ product, onUpdate }) => {
                 <button onClick={() => handleQuantityChange(1)}>+</button>
             </div>
             <div>
-                <strong>Statut : </strong> {getStatusLabel(status)}
+                <span className={`status-badge ${statusInfo.badge}`}>
+                    {statusInfo.icon} {statusInfo.label}
+                </span>
             </div>
             <div className="actions" style={{ display: 'flex', gap: '8px' }}>
                 <button className="secondary" onClick={() => setIsHistoryOpen(true)}>Historique</button>

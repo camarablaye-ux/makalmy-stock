@@ -10,11 +10,11 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
             manifest: {
-                name: 'Stock Alert',
-                short_name: 'StockAlert',
-                description: 'Application de gestion des stocks Fast Food',
-                theme_color: '#0f172a',
-                background_color: '#0f172a',
+                name: 'Makalmy Stock',
+                short_name: 'Makalmy',
+                description: 'Gestion des stocks Makalmy',
+                theme_color: '#ffffff',
+                background_color: '#ffffff',
                 display: 'standalone',
                 icons: [
                     {
