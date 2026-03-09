@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../database/connection');
 const { verifyToken, isProprietaire } = require('../middleware/auth');
+const { sendStockAlertEmail } = require('../utils/mailService');
 const router = express.Router();
 
 router.get('/', verifyToken, async (req, res) => {
@@ -34,6 +35,25 @@ router.patch('/:id/quantite', verifyToken, async (req, res) => {
 
         const historySql = `INSERT INTO history(product_id, ancienne_valeur, nouvelle_valeur, utilisateur) VALUES(?,?,?,?)`;
         await db.execute(historySql, [req.params.id, ancienne_quantite, quantite_stock, req.user.username]);
+
+        // Vérification pour déclencher l'alerte email
+        try {
+            const productQuery = await db.query("SELECT * FROM products WHERE id = ?", [req.params.id]);
+            if (productQuery.length > 0) {
+                const product = productQuery[0];
+
+                // Si le nouveau stock est sous le seuil ET qu'il était au-dessus avant
+                if (parseFloat(quantite_stock) <= parseFloat(product.seuil_minimum) &&
+                    parseFloat(ancienne_quantite) > parseFloat(product.seuil_minimum)) {
+
+                    const emailTo = process.env.ALERT_EMAIL_TO;
+                    // On n'attend pas ("await") l'envoi de l'email pour ne pas ralentir le frontend
+                    sendStockAlertEmail(emailTo, product).catch(e => console.error("Échec asynchrone email:", e));
+                }
+            }
+        } catch (e) {
+            console.error("Erreur lors de la vérification de l'alerte produit:", e);
+        }
 
         res.json({ message: "Quantité mise à jour", changes: result.changes });
     } catch (err) {
