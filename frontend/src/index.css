@@ -682,6 +682,11 @@ button:disabled {
   }
 }
 
+/* Hide Bottom Nav on Desktop */
+.bottom-nav {
+  display: none;
+}
+
 /* ===== MOBILE (True App Feel) ===== */
 @media (max-width: 600px) {
   .container {
