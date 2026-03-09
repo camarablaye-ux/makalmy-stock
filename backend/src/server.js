@@ -7,6 +7,7 @@ const financeRoutes = require('./routes/finances');
 const investRoutes = require('./routes/investissements');
 const fournisseurRoutes = require('./routes/fournisseurs');
 const analyticsRoutes = require('./routes/analytics');
+const menuRoutes = require('./routes/menus');
 const db = require('./database/connection');
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/api/finances', financeRoutes);
 app.use('/api/investissements', investRoutes);
 app.use('/api/fournisseurs', fournisseurRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/menus', menuRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -113,6 +115,22 @@ const initDatabase = async () => {
             categorie TEXT DEFAULT 'Général',
             notes TEXT DEFAULT '',
             date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        await db.execute(`CREATE TABLE IF NOT EXISTS menus (
+            id ${idType},
+            nom TEXT UNIQUE NOT NULL,
+            prix REAL DEFAULT 0,
+            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        await db.execute(`CREATE TABLE IF NOT EXISTS menu_ingredients (
+            menu_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantite_necessaire REAL NOT NULL,
+            FOREIGN KEY(menu_id) REFERENCES menus(id) ON DELETE CASCADE,
+            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE,
+            PRIMARY KEY (menu_id, product_id)
         )`);
 
         console.log('✅ Tables de la base de données vérifiées/créées.');

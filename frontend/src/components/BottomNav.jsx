@@ -14,10 +14,14 @@ const BottomNav = ({ toggleTheme, theme }) => {
         ...(user.role === 'proprietaire'
             ? [
                 { path: '/inventaire', icon: '⚡', label: 'Inventaire' },
+                { path: '/menus', icon: '🍔', label: 'Menus' },
                 { path: '/finances', icon: '💰', label: 'Finances' },
                 { path: '/analytics', icon: '📈', label: 'Analytics' }
             ]
-            : [{ path: '/saisie', icon: '💳', label: 'Saisie' }]
+            : [
+                { path: '/saisie', icon: '💳', label: 'Dépenses' },
+                { path: '/caisse', icon: '🍔', label: 'Caisse' }
+            ]
         ),
         { path: '/settings', icon: '⚙️', label: 'Réglages' },
         { path: '#theme', icon: theme === 'light' ? '🌙' : '☀️', label: theme === 'light' ? 'Sombre' : 'Clair' }

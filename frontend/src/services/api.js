@@ -76,3 +76,9 @@ export const changePassword = (data) => apiClient.post('/auth/change-password', 
 export const getEmployes = () => apiClient.get('/auth/employes');
 export const createEmploye = (data) => apiClient.post('/auth/employes', data);
 export const deleteEmploye = (id) => apiClient.delete(`/auth/employes/${id}`);
+
+// Menus & Recettes API
+export const getMenus = () => apiClient.get('/menus');
+export const createMenu = (data) => apiClient.post('/menus', data);
+export const deleteMenu = (id) => apiClient.delete(`/menus/${id}`);
+export const sellMenu = (id, quantite = 1) => apiClient.post(`/menus/${id}/vendre`, { quantite });

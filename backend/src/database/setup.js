@@ -60,6 +60,22 @@ const setup = async () => {
             date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
 
+        await db.execute(`CREATE TABLE IF NOT EXISTS menus (
+            id ${idType},
+            nom TEXT UNIQUE NOT NULL,
+            prix REAL DEFAULT 0,
+            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        await db.execute(`CREATE TABLE IF NOT EXISTS menu_ingredients (
+            menu_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantite_necessaire REAL NOT NULL,
+            FOREIGN KEY(menu_id) REFERENCES menus(id) ON DELETE CASCADE,
+            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE,
+            PRIMARY KEY (menu_id, product_id)
+        )`);
+
         await db.execute(`CREATE TABLE IF NOT EXISTS users (
             id ${idType},
             username TEXT UNIQUE NOT NULL,

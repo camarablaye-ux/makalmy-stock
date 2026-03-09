@@ -9,6 +9,8 @@ import EmployeeChargeForm from './components/EmployeeChargeForm';
 import Settings from './components/Settings';
 import BottomNav from './components/BottomNav';
 import BulkEditProducts from './components/BulkEditProducts';
+import MenuManagement from './components/MenuManagement';
+import CaisseMenu from './components/CaisseMenu';
 import { Toaster } from 'react-hot-toast';
 
 const ProtectedRoute = ({ children }) => {
@@ -96,6 +98,20 @@ function App() {
                         ) : (
                             <Navigate to="/" replace />
                         )}
+                    </ProtectedRoute>
+                } />
+                <Route path="/menus" element={
+                    <ProtectedRoute>
+                        {user?.role === 'proprietaire' ? (
+                            <MenuManagement theme={theme} toggleTheme={toggleTheme} />
+                        ) : (
+                            <Navigate to="/" replace />
+                        )}
+                    </ProtectedRoute>
+                } />
+                <Route path="/caisse" element={
+                    <ProtectedRoute>
+                        <CaisseMenu theme={theme} toggleTheme={toggleTheme} />
                     </ProtectedRoute>
                 } />
                 <Route path="/settings" element={
