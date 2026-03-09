@@ -5,6 +5,9 @@ import Logo from './Logo';
 import FinanceCharts from './FinanceCharts';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // --- SYSCOHADA Révisé : Catégories adaptées à la restauration rapide ---
 const CATEGORIES_SYSCOHADA = {
@@ -159,22 +162,79 @@ const FinanceDashboard = ({ theme, toggleTheme }) => {
     // Résultat net ajusté = Bénéfice - Amortissements mensuels
     const resultatAjuste = bilan.beneficeNet - investResume.amortissementMensuel;
 
-    // Export CSV
-    const handleExportCSV = () => {
-        const header = 'Date,Type,Catégorie SYSCOHADA,Motif,Montant (FCFA)';
-        const rows = filteredTransactions.map(t => {
-            const date = new Date(t.date).toLocaleDateString('fr-FR');
-            return `${date},${t.type},"${t.categorie_syscohada || ''}","${t.motif}",${t.type === 'charge' ? '-' : ''}${t.montant}`;
+    // Export Excel
+    const handleExportExcel = () => {
+        if (filteredTransactions.length === 0) return toast.error("Aucune donnée à exporter");
+
+        const headers = ['Date', 'Type', 'Catégorie SYSCOHADA', 'Motif', 'Qui', 'Montant (FCFA)'];
+        const dataArray = filteredTransactions.map(t => [
+            new Date(t.date).toLocaleDateString('fr-FR'),
+            t.type.toUpperCase(),
+            t.categorie_syscohada || 'N/A',
+            t.motif,
+            t.utilisateur || 'système',
+            (t.type === 'charge' ? -1 : 1) * t.montant
+        ]);
+
+        dataArray.unshift(headers);
+        const ws = XLSX.utils.aoa_to_sheet(dataArray);
+        ws['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 15 }];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+        XLSX.writeFile(wb, `Finances_MakalmyStock_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success('Export Excel réussi ✓');
+    };
+
+    // Export PDF
+    const handleExportPDF = () => {
+        if (filteredTransactions.length === 0) return toast.error("Aucune donnée à exporter");
+
+        const doc = new jsPDF();
+        doc.setFont("helvetica");
+
+        doc.setFontSize(22);
+        doc.text("Makalmy Stock - Bilan Financier", 14, 20);
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, 14, 28);
+
+        const head = [['Date', 'Type', 'Catégorie', 'Motif', 'Montant']];
+        const body = filteredTransactions.map(t => [
+            new Date(t.date).toLocaleDateString('fr-FR'),
+            t.type.toUpperCase(),
+            t.categorie_syscohada || '-',
+            t.motif,
+            `${t.type === 'charge' ? '-' : '+'}${t.montant.toLocaleString()} F`
+        ]);
+
+        doc.autoTable({
+            startY: 35,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40] },
+            didParseCell: function (data) {
+                if (data.section === 'body' && data.column.index === 4) {
+                    const isRevenu = data.row.raw[1] === 'REVENU';
+                    data.cell.styles.textColor = isRevenu ? [16, 185, 129] : [239, 68, 68];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
         });
-        const csv = [header, ...rows].join('\n');
-        const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `finances_makalmy_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success('Export CSV téléchargé ✓');
+
+        const finalY = doc.lastAutoTable.finalY || 40;
+        doc.setTextColor(0);
+        doc.setFontSize(14);
+        doc.text(`Total Revenus : ${bilan.totalRevenus.toLocaleString()} FCFA`, 14, finalY + 15);
+        doc.text(`Total Charges : ${bilan.totalCharges.toLocaleString()} FCFA`, 14, finalY + 23);
+
+        doc.setFontSize(16);
+        doc.setTextColor(resultatAjuste >= 0 ? [16, 185, 129] : [239, 68, 68]);
+        doc.text(`RÉSULTAT NET : ${resultatAjuste >= 0 ? '+' : ''}${resultatAjuste.toLocaleString()} FCFA`, 14, finalY + 35);
+
+        doc.save(`Bilan_Financier_${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success("Export PDF réussi ✓");
     };
 
     return (
@@ -256,8 +316,9 @@ const FinanceDashboard = ({ theme, toggleTheme }) => {
                         </select>
                         <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} style={{ padding: '7px 10px', fontSize: '0.85rem' }} title="Date début" />
                         <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} style={{ padding: '7px 10px', fontSize: '0.85rem' }} title="Date fin" />
-                        <button onClick={handleExportCSV} className="secondary" style={{ padding: '7px 14px', fontSize: '0.85rem' }}>📥 CSV</button>
-                        <button onClick={() => setIsFormOpen(true)} style={{ padding: '7px 14px', fontSize: '0.85rem' }}>+ Transaction</button>
+                        <button onClick={handleExportExcel} className="secondary" style={{ padding: '7px 14px', fontSize: '0.85rem' }} title="Exporter Excel">📊 Excel</button>
+                        <button onClick={handleExportPDF} style={{ padding: '7px 14px', fontSize: '0.85rem', background: 'var(--danger-color)', color: '#fff', border: 'none' }} title="Exporter PDF">📄 PDF</button>
+                        <button onClick={() => setIsFormOpen(true)} style={{ padding: '7px 14px', fontSize: '0.85rem', marginLeft: 'auto' }}>+ Transaction</button>
                     </div>
                     <div style={{ background: 'var(--surface-color)', padding: '1.2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--surface-border)', boxShadow: 'var(--shadow-sm)' }}>
                         {filteredTransactions.length === 0 ? (

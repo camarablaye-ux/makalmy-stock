@@ -8,6 +8,9 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, Legend, Cell
 } from 'recharts';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AnalyticsDashboard = ({ theme, toggleTheme }) => {
     const { user, logOut } = useAuth();
@@ -57,6 +60,70 @@ const AnalyticsDashboard = ({ theme, toggleTheme }) => {
         return <div style={{ textAlign: 'center', marginTop: '5rem', color: 'var(--text-secondary)' }}>Chargement des statistiques...</div>;
     }
 
+    const handleExportExcel = () => {
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Marge
+        const margeData = [
+            ['Chiffre d\'Affaires (FCFA)', 'Achats Matières (FCFA)', 'Marge Brute (FCFA)', 'Marge Brute (%)'],
+            [marge.chiffreAffaires, marge.coutsAchatMatiere, marge.margeBruteValeur, marge.margeBrutePourcentage]
+        ];
+        const wsMarge = XLSX.utils.aoa_to_sheet(margeData);
+        XLSX.utils.book_append_sheet(wb, wsMarge, "Bilan & Marge");
+
+        // Sheet 2: Top Produits
+        const topData = [
+            ['Nom Produit', 'Catégorie', 'Quantité Sortie', 'Unité'],
+            ...topProducts.map(p => [p.nom_produit, p.categorie, p.quantite_sortie, p.unite])
+        ];
+        const wsTop = XLSX.utils.aoa_to_sheet(topData);
+        XLSX.utils.book_append_sheet(wb, wsTop, "Top Ventes");
+
+        XLSX.writeFile(wb, `Analytics_MakalmyStock_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success("Export Excel réussi ✓");
+    };
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFont("helvetica");
+
+        doc.setFontSize(22);
+        doc.text("Rapport Analytique - Makalmy Stock", 14, 20);
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, 14, 28);
+
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text("Bilan de Rentabilité", 14, 40);
+
+        doc.autoTable({
+            startY: 45,
+            head: [['Métriques', 'Valeur', 'Pourcentage']],
+            body: [
+                ['Chiffre d\'Affaires Global', `${marge.chiffreAffaires.toLocaleString('fr-FR')} F`, '-'],
+                ['Coût des Achats Matières', `${marge.coutsAchatMatiere.toLocaleString('fr-FR')} F`, '-'],
+                ['Marge Brute (Profit)', `${marge.margeBruteValeur.toLocaleString('fr-FR')} F`, `${marge.margeBrutePourcentage}%`]
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY || 45;
+        doc.text("Top des Ventes (Consommation de Stock)", 14, finalY + 15);
+
+        doc.autoTable({
+            startY: finalY + 20,
+            head: [['Nom Produit', 'Catégorie', 'Quantité Sortie']],
+            body: topProducts.map(p => [p.nom_produit, p.categorie, `${p.quantite_sortie} ${p.unite}`]),
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40] }
+        });
+
+        doc.save(`Analytics_${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success("Export PDF réussi ✓");
+    };
+
     return (
         <div>
             {/* ===== HEADER ===== */}
@@ -77,6 +144,14 @@ const AnalyticsDashboard = ({ theme, toggleTheme }) => {
                     <button onClick={logOut} className="secondary" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Quitter</button>
                 </div>
             </header>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', color: primaryColor }}>Analyse Globale</h2>
+                <div style={{ display: 'flex', gap: '0.8rem' }}>
+                    <button onClick={handleExportExcel} className="secondary" style={{ padding: '8px 16px', borderRadius: '4px', fontSize: '0.9rem' }}>📊 Exporter Excel</button>
+                    <button onClick={handleExportPDF} style={{ padding: '8px 16px', borderRadius: '4px', fontSize: '0.9rem', background: 'var(--danger-color)', color: '#fff', border: 'none' }}>📄 Exporter PDF</button>
+                </div>
+            </div>
 
             {/* ===== TOP CARDS (Marge & CA) ===== */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

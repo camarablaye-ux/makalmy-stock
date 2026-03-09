@@ -8,6 +8,9 @@ import DashboardStats from './DashboardStats';
 import { toast } from 'react-hot-toast';
 import { getCategoryIcon } from '../utils/categoryIcons';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const ProductList = ({ theme, toggleTheme }) => {
     const { user, logOut } = useAuth();
@@ -54,50 +57,101 @@ const ProductList = ({ theme, toggleTheme }) => {
         fetchProducts();
     };
 
-    const handleExportCSV = () => {
+    const handleExportExcel = () => {
         if (products.length === 0) {
             toast.error("Rien à exporter");
             return;
         }
 
-        let exportProducts = products;
+        let exportData = products;
         let headers = ['Nom', 'Catégorie', 'Quantité', 'Unité', 'Prix Unitaire (FCFA)', 'Seuil Min', 'Seuil Max', 'Péremption', 'Valeur Totale (FCFA)'];
+        let wscols = [{ wch: 30 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 20 }];
 
         if (user.role === 'employe') {
-            exportProducts = products.filter(p => p.quantite_stock <= p.seuil_minimum);
+            exportData = products.filter(p => p.quantite_stock <= p.seuil_minimum);
             headers = ['Nom', 'Catégorie', 'Quantité Actuelle', 'Unité', 'Seuil Minimum', 'Péremption'];
-            if (exportProducts.length === 0) {
+            wscols = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }];
+            if (exportData.length === 0) {
                 toast.error("Aucun produit en manque, liste de courses vide !");
                 return;
             }
         }
 
-        const csvContent = [
-            headers.join(';'),
-            ...exportProducts.map(p => {
-                const premp = p.date_peremption ? new Date(p.date_peremption).toLocaleDateString() : 'N/A';
+        const dataArray = exportData.map(p => {
+            const premp = p.date_peremption ? new Date(p.date_peremption).toLocaleDateString() : 'N/A';
+            if (user.role === 'employe') {
+                return [p.nom_produit, p.categorie, p.quantite_stock, p.unite, p.seuil_minimum, premp];
+            }
+            const totalVal = (p.quantite_stock * (p.prix_unitaire || 0));
+            return [p.nom_produit, p.categorie, p.quantite_stock, p.unite, p.prix_unitaire || 0, p.seuil_minimum, p.seuil_maximum, premp, totalVal];
+        });
 
-                if (user.role === 'employe') {
-                    return `"${p.nom_produit}";"${p.categorie}";${p.quantite_stock};"${p.unite}";${p.seuil_minimum};"${premp}"`;
-                }
+        dataArray.unshift(headers);
+        const ws = XLSX.utils.aoa_to_sheet(dataArray);
+        ws['!cols'] = wscols;
 
-                const totalVal = (p.quantite_stock * (p.prix_unitaire || 0));
-                return `"${p.nom_produit}";"${p.categorie}";${p.quantite_stock};"${p.unite}";${p.prix_unitaire || 0};${p.seuil_minimum};${p.seuil_maximum};"${premp}";${totalVal}`;
-            })
-        ].join('\n');
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Inventaire");
 
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel UTF-8
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
         const fileName = user.role === 'employe'
-            ? `Liste_Courses_${new Date().toISOString().split('T')[0]}.csv`
-            : `Inventaire_StockAlert_${new Date().toISOString().split('T')[0]}.csv`;
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Export réussi");
+            ? `Liste_Courses_${new Date().toISOString().split('T')[0]}.xlsx`
+            : `Inventaire_MakalmyStock_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+        toast.success("Export Excel réussi");
+    };
+
+    const handleExportPDF = () => {
+        if (products.length === 0) return toast.error("Rien à exporter");
+
+        const doc = new jsPDF();
+        doc.setFont("helvetica");
+
+        // Header
+        doc.setFontSize(22);
+        doc.text("Makalmy Stock", 14, 20);
+
+        doc.setFontSize(14);
+        doc.setTextColor(100);
+
+        let exportData = products;
+        let head = [['Nom', 'Catégorie', 'Qte', 'Prix U.', 'Valeur Totale']];
+
+        if (user.role === 'employe') {
+            exportData = products.filter(p => p.quantite_stock <= p.seuil_minimum);
+            head = [['Nom', 'Catégorie', 'Qte Actuelle', 'Minimum', 'Unité']];
+            doc.text(`Liste de Courses - ${new Date().toLocaleDateString()}`, 14, 30);
+        } else {
+            doc.text(`Rapport d'Inventaire - ${new Date().toLocaleDateString()}`, 14, 30);
+        }
+
+        const body = exportData.map(p => {
+            if (user.role === 'employe') {
+                return [p.nom_produit, p.categorie, p.quantite_stock, p.seuil_minimum, p.unite];
+            }
+            return [p.nom_produit, p.categorie, `${p.quantite_stock} ${p.unite}`, `${p.prix_unitaire || 0} F`, `${(p.quantite_stock * (p.prix_unitaire || 0)).toLocaleString()} F`];
+        });
+
+        doc.autoTable({
+            startY: 40,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40] },
+            styles: { fontSize: 10, cellPadding: 3 }
+        });
+
+        // Summary for owner
+        if (user.role === 'proprietaire') {
+            const finalY = doc.lastAutoTable.finalY || 40;
+            const totalValue = products.reduce((sum, p) => sum + (p.quantite_stock * (p.prix_unitaire || 0)), 0);
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text(`Valeur Totale du Stock : ${totalValue.toLocaleString()} FCFA`, 14, finalY + 10);
+        }
+
+        doc.save(`Inventaire_${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success("Export PDF réussi");
     };
 
     const sortedAndFilteredProducts = products
@@ -181,13 +235,20 @@ const ProductList = ({ theme, toggleTheme }) => {
                         ))}
                     </select>
                 </div>
-                <div className="filters">
+                <div className="filters" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                     <button className={`filter-pill ${filter === 'tout' ? 'active' : ''}`} onClick={() => setFilter('tout')}>Voir Tout</button>
                     <button className={`filter-pill ${filter === 'manque' ? 'active' : ''}`} onClick={() => setFilter('manque')}>⚠️ En Manque</button>
                     <button className={`filter-pill ${filter === 'surplus' ? 'active' : ''}`} onClick={() => setFilter('surplus')}>📦 En Surplus</button>
-                    <button onClick={handleExportCSV} className="secondary" style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '20px' }}>
-                        {user.role === 'employe' ? '📋 Liste de Courses' : '📥 Exporter CSV'}
-                    </button>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={handleExportExcel} className="secondary" style={{ padding: '6px 14px', borderRadius: '4px' }} title="Exporter Excel">
+                            📊 {user.role === 'employe' ? 'Courses (Excel)' : 'Excel'}
+                        </button>
+                        {user.role === 'proprietaire' && (
+                            <button onClick={handleExportPDF} style={{ padding: '6px 14px', borderRadius: '4px', background: 'var(--danger-color)', color: '#fff', border: 'none' }} title="Exporter PDF">
+                                📄 PDF
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
